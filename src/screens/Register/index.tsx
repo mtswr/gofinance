@@ -5,6 +5,8 @@ import { CategorySelectButton } from '../../components/Form/CategorySelectButton
 import { Input } from '../../components/Form/Input';
 import { TransactionTypeButton } from '../../components/Form/TransactionTypeButton';
 import { CategorySelect } from '../CategorySelect';
+import { InputForm } from '../../components/Form/InputForm';
+import { useForm } from 'react-hook-form'
 import {
     Container,
     Header,
@@ -14,11 +16,42 @@ import {
     TransactionsTypes,
 } from './styles';
 
+interface FormData {
+    name: string;
+    amount: string;
+}
+
 export function Register() {
+    const [category, setCategory] = useState({
+        key: 'category',
+        name: 'Categoria',
+    });
     const [transactionType, setTransactionType] = useState('');
+    const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+
+    const { control, handleSubmit} = useForm();
     
     function handleTransactionsTypeSelect(type: 'up' | 'down') {
         setTransactionType(type);
+    }
+
+    function handleCloseSelectCategoryModal() {
+        setCategoryModalOpen(false);
+    }
+
+    function handleOpenSelectCategoryModal() {
+        setCategoryModalOpen(true);
+    }
+
+    function handleRegister(form: FormData) {
+        const data = {
+            name: form.name,
+            amount: form.amount,
+            transactionType,
+            category: category.key,
+        };
+
+        console.log(data);
     }
 
     return (
@@ -28,10 +61,14 @@ export function Register() {
             </Header>
             <Form>
                 <Fields>
-                    <Input
+                    <InputForm
+                        name="name"
+                        control={control}
                         placeholder="Nome"
                     />
-                    <Input
+                    <InputForm
+                        name="amount"
+                        control={control}
                         placeholder="Preço"
                     />
                     <TransactionsTypes>
@@ -49,13 +86,20 @@ export function Register() {
                         />
                     </TransactionsTypes>
 
-                    <CategorySelectButton title="Categoria"/>
+                    <CategorySelectButton
+                        title={category.name}
+                        onPress={handleOpenSelectCategoryModal}
+                    />
                 </Fields>
-                <Button title="Enviar" />
+                <Button title="Enviar" onPress={handleSubmit(handleRegister)} />
             </Form>
 
-            <Modal>
-                <CategorySelect />
+            <Modal visible={categoryModalOpen}>
+                <CategorySelect
+                    category={category}
+                    setCategory={setCategory}
+                    closeSelectCategory={handleCloseSelectCategoryModal}
+                />
             </Modal>
         </Container>
     );
