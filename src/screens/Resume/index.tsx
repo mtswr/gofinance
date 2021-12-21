@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { HistoryCard } from '../../components/HistoryCard';
-import { Container, Header, Title, Content  } from './styles';
+import { Container, Header, Title, Content, ChartContainer  } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { categories } from '../../utils/categories';
+import { VictoryPie } from 'victory-native';
+import { RFValue } from 'react-native-responsive-fontsize';
+import { useTheme } from 'styled-components'
 
 //interface de transactions 
 interface TransactionData {
@@ -16,13 +19,17 @@ interface TransactionData {
 interface CategoryData {
   key: string;
   name: string;
-  total: string;
+  total: number;
+  totalFormatted: string;
   color: string;
+  percent: string;
 }
 
 export function Resume() {
   // estado 
   const [totalByCategories, setTotalByCategories] = useState<CategoryData[]>([]);
+  // theme
+  const theme = useTheme();
 
   async function loadData() {
     const dataKey = '@gofinances:transactions';
@@ -30,6 +37,10 @@ export function Resume() {
     const responseFormatted = response ? JSON.parse(response) : [];
 
     const expensives = responseFormatted.filter((expensive: TransactionData) => expensive.type === 'negative');
+    //calcular o valor total
+    const expensivesTotal = expensives.reduce((accumulator: number, expensive: TransactionData) => {
+      return accumulator + Number(expensive.amount);
+    }, 0);
 
     //vetor auxilias 
     const totalByCategory: CategoryData[] = [];
@@ -48,12 +59,17 @@ export function Resume() {
       // se a categoria for maior que 0
       // adiciona o valor da categoria no vetor auxiliar
       if (categorySum > 0) {
-        const total = categorySum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const totalFormatted = categorySum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        // descobrir o valor por categoria
+        const percent = `${((categorySum / expensivesTotal) * 100).toFixed(0)}%`;
+
         totalByCategory.push({
           key: category.key,
           name: category.name,
           color: category.color,
-          total,
+          total: categorySum,
+          totalFormatted,
+          percent,
         });
       }
     });
@@ -71,12 +87,22 @@ export function Resume() {
         <Title>Resumo por categoria</Title>
       </Header>
       <Content>
+      <ChartContainer>
+        <VictoryPie 
+            data={totalByCategories}
+            colorScale={totalByCategories.map(category => category.color)}
+            style={{ labels: { fontWeight: 'bold', fontSize: RFValue(18), fill: theme.colors.shape } }}
+            labelRadius={50}
+            x="percent"
+            y="total"
+          />
+      </ChartContainer>
         {
           totalByCategories.map(item => (
             <HistoryCard
               key={item.key}
               title={item.name}
-              amount={item.total}
+              amount={item.totalFormatted}
               color={item.color}
             />
           ))
