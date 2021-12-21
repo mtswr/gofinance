@@ -16,7 +16,6 @@ import {
     LogoutButton,
     LoadContainer,
 } from './styles';
-
 import { useTheme } from 'styled-components';
 import { HighlightCard } from '../../components/HighlightCard';
 import { TransactionCard, TransactionCardProps } from '../../components/TransactionCard';
@@ -50,10 +49,10 @@ export function Dashboard() {
         collection: DataListProps[],
         type: 'positive' | 'negative'
         ) { 
-        const lastTransaction =
+        const lastTransaction = new Date(
             Math.max.apply(Math, collection
                 .filter(transaction => transaction.type === type)
-                .map(transaction => new Date(transaction.date).getTime()));
+                .map(transaction => new Date(transaction.date).getTime())));
 
         return `${lastTransaction.getDate()} de ${lastTransaction.toLocaleString('pt-BR', { month: 'long' })}`;
     }
