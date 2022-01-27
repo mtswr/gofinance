@@ -3,7 +3,6 @@ import * as AuthSession from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { AsyncStorage } from "react-native";
 
-// https://github.com/brysgo/babel-plugin-inline-dotenv
 const { CLIENT_ID } = process.env;
 const { REDIRECT_URI } = process.env;
 
@@ -47,9 +46,11 @@ function AuthProvider({ children }: AuthProviderProps) {
             const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`;
 
             const { type, params } = await AuthSession.startAsync({ authUrl }) as AuthorizationResponse;
+
             if (type === "success") {
                 const response = await fetch(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${params.access_token}`);
                 const userInfo = await response.json();
+                console.log(userInfo);
                 setUser({
                     id: userInfo.id,
                     email: userInfo.email,
@@ -78,6 +79,7 @@ function AuthProvider({ children }: AuthProviderProps) {
                     name: credentials.fullName!.givenName!,
                     photo: undefined,
                 };
+
                 setUser(userLogged);
                 await AsyncStorage.setItem(userStorageKey, JSON.stringify(userLogged));
             }
